@@ -1,4 +1,10 @@
 # AI-Voice-Agent
-Building AI powered voice agent to generate real time human like speech responses
+Building AI powered voice agent to perform an action based on the voice note send by user
 
 "In Progress"
+
+- Accepts audio (.wav, .mp3, etc.)
+- We have added two ways to process audio,
+  1. Via audio upload
+  2. Using Websocket for streaming audio in real-time
+- Uses Deepgram to convert from speech to text (STT)

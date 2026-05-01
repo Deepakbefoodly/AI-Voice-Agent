@@ -5,3 +5,6 @@ requests
 python-dotenv
 python-multipart
 websockets
+langchain_google_genai
+langchain_community
+langchain

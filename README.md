@@ -8,3 +8,7 @@ Building AI powered voice agent to perform an action based on the voice note sen
   1. Via audio upload
   2. Using Websocket for streaming audio in real-time
 - Uses Deepgram to convert from speech to text (STT)
+- Integrated Langchain framework for,
+  1. LLM Orchestration
+  2. Tools to connect with external APIs
+  3. Building RAG system

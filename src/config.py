@@ -8,6 +8,7 @@ load_dotenv()
 
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 DEEPGRAM_URL = os.getenv("DEEPGRAM_URL")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 class Config(BaseSettings):
     CORS_ORIGINS: list[str] = ["*"]

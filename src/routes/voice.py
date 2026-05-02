@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from src.services.deepgram_service import transcribe_audio
-from src.services.rag_service import rag_service
+from src.services.rag_service import query
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ async def transcribe(file: UploadFile = File(...)):
             }
 
         # Step 3: RAG (LLM + knowledge base)
-        response = rag_service.query(transcript)
+        response = query(transcript)
 
         return {
             "transcript": transcript,

@@ -1,5 +1,5 @@
 # AI-Voice-Agent
-Building AI powered voice agent to perform an action based on the voice note send by user
+Building AI powered voice agent to perform an action based on the voice note sent by the user
 
 "In Progress"
 
@@ -11,5 +11,6 @@ Building AI powered voice agent to perform an action based on the voice note sen
 - Integrated Langchain framework for,
   1. LLM Orchestration
   2. Tools to connect with external APIs
-  3. Building RAG system
-- Using chroma vector db to store data embeddings to maintain context
+  3. Building the RAG system
+- Using chroma vector db to store data embeddings to maintain context, have written some methods in `vector_store.py`
+  to add embedded documents, run similarity search, fetching documents by id, etc.

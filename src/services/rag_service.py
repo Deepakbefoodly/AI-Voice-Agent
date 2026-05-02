@@ -1,51 +1,155 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+import asyncio
+from typing import Any
+
 from langchain_core.output_parsers import StrOutputParser
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.config import GEMINI_API_KEY
-from src.rag.vector_store import load_vector_store
+from src.rag.embeddings import embed_text
 from src.rag.prompt import get_rag_prompt
+from src.rag.vector_store import similarity_search
 
 
-def _format_docs(docs):
-    return "\n\n".join([doc.page_content for doc in docs])
+DEFAULT_TOP_K = 3
 
 
-class RAGService:
+def _get_llm() -> ChatGoogleGenerativeAI:
+    """
+    Create and return the LLM instance.
+    """
+    return ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",
+        google_api_key=GEMINI_API_KEY,
+        temperature=0.3,
+    )
 
-    def __init__(self):
-        self.vector_store = load_vector_store()
 
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
-            google_api_key=GEMINI_API_KEY,
-            temperature=0.3
-        )
-        self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
-        self.prompt = get_rag_prompt()
-        self.parser = StrOutputParser()
+def _format_docs(docs: list[dict[str, Any]]) -> str:
+    """
+    Convert retrieved vector-store results into a single context string.
+    """
+    if not docs:
+        return ""
 
-    # Sync (for REST APIs)
-    def query(self, question: str) -> str:
-        docs = self.retriever.invoke(question)
-        context = _format_docs(docs)
+    formatted_docs: list[str] = []
 
-        chain = self.prompt | self.llm | self.parser
-        return chain.invoke({
+    for index, doc in enumerate(docs, start=1):
+        content = doc.get("content", "")
+        metadata = doc.get("metadata", {})
+
+        source = metadata.get("source")
+        title = metadata.get("title")
+
+        header_parts = [f"Document {index}"]
+
+        if title:
+            header_parts.append(f"Title: {title}")
+
+        if source:
+            header_parts.append(f"Source: {source}")
+
+        header = " | ".join(header_parts)
+
+        formatted_docs.append(f"{header}\n{content}")
+
+    return "\n\n---\n\n".join(formatted_docs)
+
+
+def _build_chain():
+    """
+    Build the RAG generation chain.
+    """
+    prompt = get_rag_prompt()
+    llm = _get_llm()
+    parser = StrOutputParser()
+
+    return prompt | llm | parser
+
+
+def retrieve_context(
+    question: str,
+    top_k: int = DEFAULT_TOP_K,
+) -> str:
+    """
+    Retrieve relevant context from the vector store for a question.
+    """
+    if not question or not question.strip():
+        return ""
+
+    query_embedding = embed_text(question)
+    docs = similarity_search(
+        query_embedding=query_embedding,
+        top_k=top_k,
+    )
+
+    return _format_docs(docs)
+
+
+def query(
+    question: str,
+    top_k: int = DEFAULT_TOP_K,
+) -> str:
+    """
+    Sync RAG query function.
+
+    Useful for REST APIs.
+    """
+    if not question or not question.strip():
+        return "Please provide a valid question."
+
+    context = retrieve_context(
+        question=question,
+        top_k=top_k,
+    )
+
+    chain = _build_chain()
+
+    return chain.invoke(
+        {
             "context": context,
-            "input": question
-        })
+            "input": question,
+        }
+    )
 
-    # Async (for WebSocket / streaming systems)
-    async def aquery(self, question: str) -> str:
-        docs = await self.retriever.ainvoke(question)
-        context = _format_docs(docs)
 
-        chain = self.prompt | self.llm | self.parser
-        return await chain.ainvoke({
+async def aretrieve_context(
+    question: str,
+    top_k: int = DEFAULT_TOP_K,
+) -> str:
+    """
+    Async wrapper for retrieving relevant context.
+
+    Chroma querying is sync here, so it is moved to a background thread.
+    """
+    return await asyncio.to_thread(
+        retrieve_context,
+        question,
+        top_k,
+    )
+
+
+async def aquery(
+    question: str,
+    top_k: int = DEFAULT_TOP_K,
+) -> str:
+    """
+    Async RAG query function.
+
+    Useful for WebSocket or streaming systems.
+    """
+    if not question or not question.strip():
+        return "Please provide a valid question."
+
+    context = await aretrieve_context(
+        question=question,
+        top_k=top_k,
+    )
+
+    chain = _build_chain()
+
+    return await chain.ainvoke(
+        {
             "context": context,
-            "input": question
-        })
-
-
-# Singleton instance (shared across app)
-rag_service = RAGService()
+            "input": question,
+        }
+    )

@@ -9,6 +9,11 @@ load_dotenv()
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 DEEPGRAM_URL = os.getenv("DEEPGRAM_URL")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH")
+CHROMA_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME")
+CHROMA_TENANT_ID = os.getenv("CHROMA_TENANT_ID")
+CHROMA_CLOUD_HOST = os.getenv("CHROMA_CLOUD_HOST")
+CHROMA_API_KEY = os.getenv("CHROMA_API_KEY")
 
 class Config(BaseSettings):
     CORS_ORIGINS: list[str] = ["*"]

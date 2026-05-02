@@ -5,7 +5,7 @@ import asyncio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from src.services.deepgram_ws_service import connect_deepgram, extract_transcript
-from src.services.rag_service import rag_service
+from src.services.rag_service import aquery
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ async def voice_agent(ws: WebSocket):
 
                     if transcript:
                         # RAG + LLM processing
-                        response = await rag_service.aquery(transcript)
+                        response = await aquery(transcript)
 
                         await ws.send_json({
                             "transcript": transcript,

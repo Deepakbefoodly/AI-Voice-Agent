@@ -12,3 +12,4 @@ Building AI powered voice agent to perform an action based on the voice note sen
   1. LLM Orchestration
   2. Tools to connect with external APIs
   3. Building RAG system
+- Using chroma vector db to store data embeddings to maintain context

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from src.services.deepgram_service import transcribe_audio
-from services.rag_service import rag_service
+from src.services.rag_service import rag_service
 
 router = APIRouter()
 

@@ -5,6 +5,7 @@
 env
 .env
 __pycache__
+faiss_index
 
 # macOS
 .DS_Store

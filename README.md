@@ -14,3 +14,6 @@ Building AI powered voice agent to perform an action based on the voice note sen
   3. Building the RAG system
 - Using chroma vector db to store data embeddings to maintain context, have written some methods in `vector_store.py`
   to add embedded documents, run similarity search, fetching documents by id, etc.
+- We used **Pydantic** input validation to reject suspicious/prompt-injection style inputs
+- And **Guardrails AI** output validation to enforce a safe structured LLM response
+

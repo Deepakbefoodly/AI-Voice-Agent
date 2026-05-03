@@ -8,6 +8,8 @@ websockets
 langchain_google_genai
 langchain_community
 langchain
-faiss-cpu
 langchain_core
 chromadb
+guardrails-ai
+pydantic
+

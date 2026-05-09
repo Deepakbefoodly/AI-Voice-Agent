@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import re
+from dataclasses import dataclass
+from pathlib import Path
 from functools import lru_cache
 from typing import Any
 
@@ -9,6 +11,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from guardrails import Guard
 from pydantic import ValidationError
 
+from src.services.elevenlabs_tts_service import synthesize_speech, asynthesize_speech
 from src.config import GEMINI_API_KEY
 from src.rag.embeddings import embed_text
 from src.rag.prompt import get_rag_prompt
@@ -21,6 +24,14 @@ logger = logging.getLogger(__name__)
 DEFAULT_TOP_K = 3
 SAFE_INPUT_ERROR = "Please provide a valid question."
 SAFE_OUTPUT_ERROR = "I’m sorry, I couldn’t produce a safe response."
+
+@dataclass(frozen=True)
+class RAGVoiceResponse:
+    answer: str
+    audio_path: Path
+    audio_filename: str
+    audio_media_type: str
+
 
 @lru_cache(maxsize=1)
 def _get_llm() -> ChatGoogleGenerativeAI:
@@ -185,6 +196,18 @@ def query(
         logger.exception("RAG query failed.", exc_info=e)
         return SAFE_OUTPUT_ERROR
 
+def query_with_voice(question: str, top_k: int = 3) -> RAGVoiceResponse:
+    answer = query(question=question, top_k=top_k)
+    speech = synthesize_speech(answer)
+
+    return RAGVoiceResponse(
+        answer=answer,
+        audio_path=speech.file_path,
+        audio_filename=speech.filename,
+        audio_media_type=speech.media_type,
+    )
+
+
 
 async def aretrieve_context(
     question: str,
@@ -238,16 +261,28 @@ async def aquery(
         logger.exception("Async RAG query failed.", exc_info=e)
         return SAFE_OUTPUT_ERROR
 
-class RAGService:
-    #  Backward-compatible `RAGService` class wrapper
-    def query(self, question: str, top_k: int = DEFAULT_TOP_K) -> str:
-        return query(
-            question=question,
-            top_k=top_k,
-        )
+async def aquery_with_voice(question: str, top_k: int = 3) -> RAGVoiceResponse:
+    answer = await aquery(question=question, top_k=top_k)
+    speech = await asynthesize_speech(answer)
 
-    async def aquery(self, question: str, top_k: int = DEFAULT_TOP_K) -> str:
-        return await aquery(
-            question=question,
-            top_k=top_k,
-        )
+    return RAGVoiceResponse(
+        answer=answer,
+        audio_path=speech.file_path,
+        audio_filename=speech.filename,
+        audio_media_type=speech.media_type,
+    )
+
+
+# class RAGService:
+#     #  Backward-compatible `RAGService` class wrapper
+#     def query(self, question: str, top_k: int = DEFAULT_TOP_K) -> str:
+#         return query(
+#             question=question,
+#             top_k=top_k,
+#         )
+#
+#     async def aquery(self, question: str, top_k: int = DEFAULT_TOP_K) -> str:
+#         return await aquery(
+#             question=question,
+#             top_k=top_k,
+#         )

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.config import app_configs, settings
 from src.routes.voice import router as voice_router
+from src.routes.voice_rag import router as voice_rag_router
 
 app = FastAPI(**app_configs)
 
@@ -23,3 +24,5 @@ app.include_router(
     prefix="/voice",
     tags=["Voice APIs"]
 )
+
+app.include_router(voice_rag_router)

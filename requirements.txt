@@ -12,4 +12,6 @@ langchain_core
 chromadb
 guardrails-ai
 pydantic
+fastmcp
+
 

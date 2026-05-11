@@ -11,6 +11,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from guardrails import Guard
 from pydantic import ValidationError
 
+from services.tool_orchestration_service import orchestrate_tools_for_question
 from src.services.elevenlabs_tts_service import synthesize_speech, asynthesize_speech
 from src.config import GEMINI_API_KEY
 from src.rag.embeddings import embed_text
@@ -243,14 +244,20 @@ async def aquery(
         return SAFE_INPUT_ERROR
 
     try:
+        tool_result = await orchestrate_tools_for_question(question)
+        tool_context = tool_result.to_prompt_context()
+
         context = await aretrieve_context(
             question=validated_input.question,
             top_k=validated_input.top_k,
         )
 
+        combined_context = "\n\n".join(
+            item for item in [tool_context, context] if item
+        )
         raw_output = await _build_chain().ainvoke(
             {
-                "context": context,
+                "context": combined_context,
                 "input": validated_input.question,
             }
         )
